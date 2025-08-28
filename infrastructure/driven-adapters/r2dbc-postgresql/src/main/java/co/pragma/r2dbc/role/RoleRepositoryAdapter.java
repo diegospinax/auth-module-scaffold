@@ -4,7 +4,7 @@ import co.pragma.model.role.Role;
 import co.pragma.model.role.gateways.RoleRepository;
 import co.pragma.model.role.valueObject.RoleId;
 import co.pragma.model.role.valueObject.RoleName;
-import co.pragma.r2dbc.role.mapper.RoleMapper;
+import co.pragma.r2dbc.role.mapper.RoleAdapterMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -14,45 +14,45 @@ import reactor.core.publisher.Mono;
 public class RoleRepositoryAdapter implements RoleRepository {
 
     private final RoleR2DBCRepository repository;
-    private final RoleMapper roleMapper;
+    private final RoleAdapterMapper roleAdapterMapper;
 
-    public RoleRepositoryAdapter(RoleR2DBCRepository repository, RoleMapper roleMapper) {
+    public RoleRepositoryAdapter(RoleR2DBCRepository repository, RoleAdapterMapper roleAdapterMapper) {
         this.repository = repository;
-        this.roleMapper = roleMapper;
+        this.roleAdapterMapper = roleAdapterMapper;
     }
 
     @Override
     @Transactional
     public Mono<Role> createRole(Role role) {
-        RoleEntity roleEntity = roleMapper.domainToEntity(role);
+        RoleEntity roleEntity = roleAdapterMapper.mapToEntity(role);
         return repository.save(roleEntity)
-                .map(roleMapper::entityToDomain);
+                .flatMap(roleAdapterMapper::mapToDomain);
     }
 
     @Override
     public Flux<Role> findAll() {
         return repository.findAll()
-                .map(roleMapper::entityToDomain);
+                .flatMap(roleAdapterMapper::mapToDomain);
     }
 
     @Override
     public Mono<Role> findById(RoleId roleId) {
         return repository.findById(roleId.value)
-                .map(roleMapper::entityToDomain);
+                .flatMap(roleAdapterMapper::mapToDomain);
     }
 
     @Override
     public Mono<Role> findByName(RoleName name) {
         return repository.findByName(name.value)
-                .map(roleMapper::entityToDomain);
+                .flatMap(roleAdapterMapper::mapToDomain);
     }
 
     @Override
     @Transactional
     public Mono<Role> updateRole(Role role) {
-        RoleEntity roleEntity = roleMapper.domainToEntity(role);
+        RoleEntity roleEntity = roleAdapterMapper.mapToEntity(role);
         return repository.save(roleEntity)
-                .map(roleMapper::entityToDomain);
+                .flatMap(roleAdapterMapper::mapToDomain);
     }
 
     @Override

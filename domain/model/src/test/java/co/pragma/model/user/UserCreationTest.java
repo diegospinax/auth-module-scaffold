@@ -25,7 +25,7 @@ public class UserCreationTest {
                 new UserPhoneNumber("3103920186"),
                 new UserEmail("d@mail.com"),
                 new UserSalary(1_000_000d),
-                new Role(new RoleId(1L), new RoleName("ADMIN"), new RoleDescription("Admin default role."))
+                new RoleId(1L)
         );
 
         assertNull(user.id());
@@ -36,8 +36,6 @@ public class UserCreationTest {
         assertEquals("3103920186", user.phoneNumber().value);
         assertEquals("d@mail.com", user.email().value);
         assertEquals(1000000d, user.salary().value);
-        assertEquals(1, user.role().id().value);
-        assertEquals("ADMIN", user.role().name().value);
-        assertEquals("Admin default role.", user.role().description().value);
+        assertEquals(1, user.roleId().value);
     }
 }

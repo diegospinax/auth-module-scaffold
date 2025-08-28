@@ -2,12 +2,10 @@ package co.pragma.api;
 
 import co.pragma.api.dto.user.ResponseUserDto;
 import co.pragma.api.dto.user.SaveUserDto;
-import co.pragma.api.mapper.user.UserInMapper;
-import co.pragma.model.role.Role;
-import co.pragma.model.role.valueObject.RoleId;
+import co.pragma.api.mapper.user.UserEntryMapper;
 import co.pragma.model.user.User;
 import co.pragma.model.user.valueObject.UserEmail;
-import co.pragma.usecase.role.cases.FindRoleUseCase;
+import co.pragma.model.user.valueObject.UserId;
 import co.pragma.usecase.user.cases.CreateUserUseCase;
 import co.pragma.usecase.user.cases.DeleteUserUseCase;
 import co.pragma.usecase.user.cases.FindUserUseCase;
@@ -24,23 +22,18 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserInMapper mapper;
+    private final UserEntryMapper entryMapper;
     private final CreateUserUseCase createUseCase;
     private final FindUserUseCase findUserUseCase;
     private final DeleteUserUseCase deleteUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
-    private final FindRoleUseCase findRoleUseCase;
 
     @PostMapping("/create")
     public ResponseEntity<Mono<ResponseUserDto>> createUser(@RequestBody SaveUserDto saveUserDto) {
         return new ResponseEntity<>(
-                findRoleUseCase.findById(new RoleId(saveUserDto.roleId()))
-                        .flatMap(role -> {
-                            User user = mapper.createDtoToDomain(saveUserDto, role);
-
-                            return createUseCase.createUser(user)
-                                    .map(mapper::toResponseDto);
-                        }),
+                entryMapper.mapToDomain(saveUserDto)
+                        .flatMap(createUseCase::createUser)
+                        .map(entryMapper::mapToResponse),
                 HttpStatus.CREATED
         );
     }
@@ -48,8 +41,9 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<Mono<ResponseUserDto>> findById(@PathVariable("id") Long userId) {
         return new ResponseEntity<>(
-                findUserUseCase.findById(userId)
-                        .map(mapper::toResponseDto),
+                UserId.create(userId)
+                        .flatMap(findUserUseCase::findById)
+                        .map(entryMapper::mapToResponse),
                 HttpStatus.OK
         );
     }
@@ -57,8 +51,9 @@ public class UserController {
     @GetMapping("/email")
     public ResponseEntity<Mono<ResponseUserDto>> findByEmail(@RequestParam("value") String email) {
         return new ResponseEntity<>(
-                findUserUseCase.findByEmail(new UserEmail(email))
-                        .map(mapper::toResponseDto),
+                UserEmail.create(email)
+                        .flatMap(findUserUseCase::findByEmail)
+                        .map(entryMapper::mapToResponse),
                 HttpStatus.OK
         );
     }
@@ -67,17 +62,23 @@ public class UserController {
     public ResponseEntity<Flux<ResponseUserDto>> findAll() {
         return new ResponseEntity<>(
                 findUserUseCase.findAll()
-                        .map(mapper::toResponseDto),
+                        .map(entryMapper::mapToResponse),
                 HttpStatus.OK
         );
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Mono<ResponseUserDto>> updateUser(@PathVariable("id") Long userId, @RequestBody SaveUserDto saveUserDto) {
-        User newUserData = mapper.updateDataToDomain(saveUserDto, new Role(new RoleId(saveUserDto.roleId()), null, null));
+        Mono<UserId> userIdMono = UserId.create(userId);
         return new ResponseEntity<>(
-                updateUserUseCase.updateUser(userId, newUserData)
-                        .map(mapper::toResponseDto),
+                Mono
+                        .zip(userIdMono, entryMapper.mapToDomain(saveUserDto))
+                        .flatMap(parameters -> {
+                            UserId id = parameters.getT1();
+                            User user = parameters.getT2();
+                            return updateUserUseCase.updateUser(id, user);
+                        })
+                        .map(entryMapper::mapToResponse),
                 HttpStatus.OK
         );
     }
@@ -85,7 +86,8 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Mono<Void>> deleteUser(@PathVariable("id") Long userId) {
         return new ResponseEntity<>(
-                deleteUserUseCase.deleteUser(userId),
+                UserId.create(userId)
+                                .flatMap(deleteUserUseCase::deleteUser),
                 HttpStatus.NO_CONTENT
         );
     }

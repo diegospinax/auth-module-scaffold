@@ -1,18 +1,27 @@
 package co.pragma.model.user.valueObject;
 
 import co.pragma.model.user.exception.UserValidationException;
+import reactor.core.publisher.Mono;
 
 public class UserSalary extends UserField<Double>{
 
-    public UserSalary(Double value) {
+    private UserSalary(Double value) {
         super(value);
     }
 
     @Override
-    public void validate() {
+    public Mono<Void> validate() {
         if(value == null)
-            throw new UserValidationException("Salary is required.");
+            return Mono.error(new UserValidationException("Salary is required."));
         if(value < 0d || value > 15_000_000d)
-            throw new UserValidationException("Invalid salary provided.");
+            return Mono.error(new UserValidationException("Invalid salary provided."));
+
+        return Mono.empty();
+    }
+
+    public static Mono<UserSalary> create(Double value) {
+        UserSalary salary = new UserSalary(value);
+        return salary.validate()
+                .thenReturn(salary);
     }
 }

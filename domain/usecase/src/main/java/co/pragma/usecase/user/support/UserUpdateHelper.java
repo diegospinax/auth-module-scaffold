@@ -33,7 +33,7 @@ public class UserUpdateHelper {
                 updateUserField(updateUser.phoneNumber(), currentUser.phoneNumber()),
                 updateUserField(updateUser.email(), currentUser.email()),
                 updateUserField(updateUser.salary(), currentUser.salary()),
-                updateUser.role() != null ? updateUser.role() : currentUser.role()
+                updateUser.roleId() != null ? updateUser.roleId() : currentUser.roleId()
         );
     }
 
@@ -52,10 +52,10 @@ public class UserUpdateHelper {
     }
 
     private Mono<User> validateRolChange(User userUpdate) {
-        if (userUpdate.role() == null) {
+        if (userUpdate.roleId() == null) {
             return Mono.just(userUpdate);
         }
-        return roleRepository.findById(userUpdate.role().id())
+        return roleRepository.findById(userUpdate.roleId())
                 .switchIfEmpty(Mono.error(new DataIntegrationValidationException("Role does not exists.")))
                 .map(role -> userUpdate);
     }

@@ -13,6 +13,6 @@ public record ResponseUserDto(
         String phoneNumber,
         String email,
         Double salary,
-        ResponseRoleDto role
+        Long roleId
 ) {
 }

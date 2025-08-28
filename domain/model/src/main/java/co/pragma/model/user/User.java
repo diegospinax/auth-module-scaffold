@@ -1,6 +1,6 @@
 package co.pragma.model.user;
 
-import co.pragma.model.role.Role;
+import co.pragma.model.role.valueObject.RoleId;
 import co.pragma.model.user.valueObject.*;
 
 public record User(
@@ -12,6 +12,6 @@ public record User(
         UserPhoneNumber phoneNumber,
         UserEmail email,
         UserSalary salary,
-        Role role
+        RoleId roleId
 ) {
 }

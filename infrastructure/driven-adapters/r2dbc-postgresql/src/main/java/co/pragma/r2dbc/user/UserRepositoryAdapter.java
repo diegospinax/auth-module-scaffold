@@ -1,93 +1,61 @@
 package co.pragma.r2dbc.user;
 
 
-import co.pragma.model.role.Role;
-import co.pragma.model.role.valueObject.RoleId;
 import co.pragma.model.user.User;
 import co.pragma.model.user.gateways.UserRepository;
 import co.pragma.model.user.valueObject.UserEmail;
-import co.pragma.r2dbc.user.mapper.UserMapper;
-import co.pragma.usecase.role.cases.FindRoleUseCase;
+import co.pragma.r2dbc.user.mapper.UserAdapterMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
+@RequiredArgsConstructor
 public class UserRepositoryAdapter implements UserRepository {
 
-    private final UserR2DBCRepository repository;
-    private final FindRoleUseCase findRoleUseCase;
-    private final UserMapper mapper;
-
-    public UserRepositoryAdapter(UserR2DBCRepository repository, FindRoleUseCase findRoleUseCase, UserMapper mapper) {
-        this.repository = repository;
-        this.findRoleUseCase = findRoleUseCase;
-        this.mapper = mapper;
-    }
+    private final UserR2DBCRepository userRepository;
+    private final UserAdapterMapper userAdapterMapper;
 
     @Override
     @Transactional
     public Mono<User> createUser(User user) {
-        UserEntity userEntity = mapper.domainToEntity(user);
-        return repository.save(userEntity)
-                .flatMap(entity -> {
-                    Mono<Role> roleMono = findRoleUseCase.findById(new RoleId(entity.getRoleId()));
-
-                    return roleMono
-                            .map(role -> mapper.entityToDomain(entity, role));
-                });
+        UserEntity userEntity = userAdapterMapper.mapToEntity(user);
+        return userRepository.save(userEntity)
+                .flatMap(userAdapterMapper::mapToDomain);
     }
 
     @Override
     public Flux<User> findAll() {
-        return repository.findAll()
-                .flatMap(entity -> {
-                    Mono<Role> roleMono = findRoleUseCase.findById(new RoleId(entity.getRoleId()));
-
-                    return roleMono
-                            .map(role -> mapper.entityToDomain(entity, role));
-                });
+        return userRepository.findAll()
+                .flatMap(userAdapterMapper::mapToDomain);
     }
 
     @Override
     public Mono<User> findById(Long userId) {
-        return repository.findById(userId)
-                .flatMap(entity -> {
-                    Mono<Role> roleMono = findRoleUseCase.findById(new RoleId(entity.getRoleId()));
-
-                    return roleMono
-                            .map(role -> mapper.entityToDomain(entity, role));
-                });
+        return userRepository.findById(userId)
+                .flatMap(userAdapterMapper::mapToDomain);
     }
 
     @Override
     public Mono<User> findByEmail(UserEmail email) {
-        return repository.findByEmail(email.value)
-                .flatMap(entity -> {
-                    Mono<Role> roleMono = findRoleUseCase.findById(new RoleId(entity.getRoleId()));
-
-                    return roleMono
-                            .map(role -> mapper.entityToDomain(entity, role));
-                });
+        return userRepository.findByEmail(email.value)
+                .flatMap(userAdapterMapper::mapToDomain);
     }
 
     @Override
     @Transactional
     public Mono<User> updateUser(User user) {
-        UserEntity userEntity = mapper.domainToEntity(user);
-        return repository.save(userEntity)
-                .flatMap(entity -> {
-                    Mono<Role> roleMono = findRoleUseCase.findById(new RoleId(entity.getRoleId()));
-
-                    return roleMono
-                            .map(role -> mapper.entityToDomain(entity, role));
-                });
+        UserEntity userEntity = userAdapterMapper.mapToEntity(user);
+        return userRepository.save(userEntity)
+                .flatMap(userAdapterMapper::mapToDomain);
     }
 
     @Override
     public Mono<Void> deleteUser(Long userId) {
-        return repository.deleteById(userId);
+        return userRepository.deleteById(userId);
     }
+
 
 }
