@@ -5,21 +5,19 @@ import co.pragma.model.role.gateways.RoleRepository;
 import co.pragma.model.role.valueObject.RoleId;
 import co.pragma.model.role.valueObject.RoleName;
 import co.pragma.r2dbc.role.mapper.RoleAdapterMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
+@RequiredArgsConstructor
 public class RoleRepositoryAdapter implements RoleRepository {
 
     private final RoleR2DBCRepository repository;
     private final RoleAdapterMapper roleAdapterMapper;
-
-    public RoleRepositoryAdapter(RoleR2DBCRepository repository, RoleAdapterMapper roleAdapterMapper) {
-        this.repository = repository;
-        this.roleAdapterMapper = roleAdapterMapper;
-    }
 
     @Override
     @Transactional

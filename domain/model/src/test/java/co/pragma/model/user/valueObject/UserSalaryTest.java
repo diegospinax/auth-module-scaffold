@@ -3,28 +3,39 @@ package co.pragma.model.user.valueObject;
 import co.pragma.model.user.exception.UserValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class UserSalaryTest {
 
     @Test
-    public void nullTest() {
-        Exception exception = Assertions.assertThrows(UserValidationException.class, () -> {
-            new UserSalary(null);
-        });
-        Assertions.assertEquals("Salary is required.", exception.getMessage());
+    public void shouldThrowWhenSalaryNullProvided() {
+        Mono<UserSalary> salaryMono = UserSalary.create(null);
+
+        StepVerifier.create(salaryMono)
+                        .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                                .getMessage()
+                                .equals("Salary is required."))
+                                .verify();
     }
 
     @Test
-    public void invalidSalary() {
-        Exception exception = Assertions.assertThrows(UserValidationException.class, () -> {
-            new UserSalary(15_000_000.1);
-        });
-        Assertions.assertEquals("Invalid salary provided.", exception.getMessage());
+    public void shouldThrowWhenSalaryInvalidProvided() {
+        Mono<UserSalary> salaryMono = UserSalary.create(15_000_000.1);
+
+        StepVerifier.create(salaryMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Invalid salary provided."))
+                .verify();
     }
 
     @Test
-    public void validSalary () {
-        UserSalary userSalary = new UserSalary(4_500_000d);
-        Assertions.assertEquals(4500000.0, userSalary.value);
+    public void shouldCreate () {
+        Mono<UserSalary> salaryMono = UserSalary.create(15_000_000d);
+
+        StepVerifier.create(salaryMono)
+                .expectNext(salaryMono.block())
+                .verifyComplete();
     }
 }

@@ -1,10 +1,11 @@
 package co.pragma.config;
 
+import co.pragma.model.role.gateways.RoleRepository;
+import co.pragma.model.user.gateways.UserRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.mockito.Mockito;
+import org.springframework.context.annotation.*;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UseCasesConfigTest {
@@ -33,6 +34,18 @@ public class UseCasesConfigTest {
         @Bean
         public MyUseCase myUseCase() {
             return new MyUseCase();
+        }
+
+        @Bean
+        @Primary
+        public RoleRepository roleRepository() {
+            return Mockito.mock(RoleRepository.class);
+        }
+
+        @Bean
+        @Primary
+        public UserRepository userRepository() {
+            return Mockito.mock(UserRepository.class);
         }
     }
 

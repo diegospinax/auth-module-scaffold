@@ -3,28 +3,39 @@ package co.pragma.model.user.valueObject;
 import co.pragma.model.user.exception.UserValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class UserPhoneNumberTest {
 
     @Test
-    public void nullTest () {
-        Exception exception = Assertions.assertThrows(UserValidationException.class, () -> {
-            new UserPhoneNumber(null);
-        });
-        Assertions.assertEquals("Phone number is required.", exception.getMessage());
+    public void shouldThrowWhenPhoneNullProvided() {
+        Mono<UserPhoneNumber> numberMono = UserPhoneNumber.create(null);
+
+        StepVerifier.create(numberMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Phone number is required."))
+                .verify();
     }
 
     @Test
-    public void invalidPhoneNumberTest () {
-        Exception exception = Assertions.assertThrows(UserValidationException.class, () -> {
-            new UserPhoneNumber("12345");
-        });
-        Assertions.assertEquals("Invalid phone provided.", exception.getMessage());
+    public void shouldThrowWhenPhoneInvalidProvided() {
+        Mono<UserPhoneNumber> numberMono = UserPhoneNumber.create("12345");
+
+        StepVerifier.create(numberMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Invalid phone provided."))
+                .verify();
     }
 
     @Test
-    public void validPhoneNumberTest() {
-        UserPhoneNumber userPhoneNumber = new UserPhoneNumber("3103920000");
-        Assertions.assertEquals("3103920000", userPhoneNumber.value);
+    public void shouldCreate() {
+        Mono<UserPhoneNumber> numberMono = UserPhoneNumber.create("3103920000");
+
+        StepVerifier.create(numberMono)
+                .expectNext(numberMono.block())
+                .verifyComplete();
     }
 }

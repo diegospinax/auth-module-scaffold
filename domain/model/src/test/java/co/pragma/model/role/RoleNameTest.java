@@ -2,32 +2,40 @@ package co.pragma.model.role;
 
 import co.pragma.model.role.exception.RoleValidationException;
 import co.pragma.model.role.valueObject.RoleName;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class RoleNameTest {
 
     @Test
-    public void nullTest() {
-        Exception exception = Assertions.assertThrows(RoleValidationException.class, () -> {
-            new RoleName(null);
-        });
+    public void shouldThrowWhenRoleNameNullProvided() {
+        Mono<RoleName> nameMono = RoleName.create(null);
 
-        Assertions.assertEquals("Role name is required.", exception.getMessage());
+        StepVerifier.create(nameMono)
+                .expectErrorMatches(throwable -> throwable instanceof RoleValidationException && throwable
+                        .getMessage()
+                        .equals("Role name is required."))
+                .verify();
     }
 
     @Test
     public void invalidRoleDescriptionProvidedTest() {
-        Exception exception = Assertions.assertThrows(RoleValidationException.class, () -> {
-            new RoleName("");
-        });
+        Mono<RoleName> nameMono = RoleName.create(" ");
 
-        Assertions.assertEquals("Role must contain only letters and underscore.", exception.getMessage());
+        StepVerifier.create(nameMono)
+                .expectErrorMatches(throwable -> throwable instanceof RoleValidationException && throwable
+                        .getMessage()
+                        .equals("Role must contain only letters and underscore."))
+                .verify();
     }
 
     @Test
     public void validRoleDescriptionTest() {
-        RoleName name = new RoleName("EMPLOYEE_ROLE");
-        Assertions.assertEquals("EMPLOYEE_ROLE", name.value);
+        Mono<RoleName> nameMono = RoleName.create("EMPLOYEE_ROLE");
+
+        StepVerifier.create(nameMono)
+                .expectNext(nameMono.block())
+                .verifyComplete();
     }
 }

@@ -3,28 +3,39 @@ package co.pragma.model.user.valueObject;
 import co.pragma.model.user.exception.UserValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class UserEmailTest {
 
     @Test
-    public void nullTest() {
-        Exception exception = Assertions.assertThrows(UserValidationException.class, () -> {
-            new UserEmail(null);
-        });
-        Assertions.assertEquals("Email is required.", exception.getMessage());
+    public void shouldThrowWhenEmailNullProvided() {
+        Mono<UserEmail> emailMono = UserEmail.create(null);
+
+        StepVerifier.create(emailMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Email is required."))
+                .verify();
     }
 
     @Test
     public void invalidEmail() {
-        Exception exception = Assertions.assertThrows(UserValidationException.class, () -> {
-            new UserEmail("aeiou@.com");
-        });
-        Assertions.assertEquals("Invalid email provided.", exception.getMessage());
+        Mono<UserEmail> emailMono = UserEmail.create("aeiou@.com");
+
+        StepVerifier.create(emailMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Invalid email provided."))
+                .verify();
     }
 
     @Test
     public void validEmail() {
-        UserEmail userEmail = new UserEmail("d@mail.com");
-        Assertions.assertEquals("d@mail.com", userEmail.value);
+        Mono<UserEmail> emailMono = UserEmail.create("d@mail.com");
+
+        StepVerifier.create(emailMono)
+                .expectNext(emailMono.block())
+                .verifyComplete();
     }
 }

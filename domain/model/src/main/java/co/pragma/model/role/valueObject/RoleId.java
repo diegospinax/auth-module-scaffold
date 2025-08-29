@@ -12,9 +12,8 @@ public class RoleId extends RoleField<Long>{
     @Override
     public Mono<Void> validate() {
         if(value == null) {
-            return Mono.error(new RoleValidationException("Role Id is required"));
+            return Mono.error(new RoleValidationException("Role Id is required."));
         }
-
         return Mono.empty();
     }
 

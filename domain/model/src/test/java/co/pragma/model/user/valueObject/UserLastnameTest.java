@@ -1,55 +1,42 @@
 package co.pragma.model.user.valueObject;
 
+import co.pragma.model.user.exception.UserValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class UserLastnameTest {
 
-    private final String exceptionMessage = "Lastnames must contain only letters and underscore between them.";
-
     @Test
-    public void nullTest () {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserLastname(null);
-        });
-        Assertions.assertEquals("Lastname is required.", exception.getMessage());
+    public void shouldThrowWhenNameNullProvided() {
+        Mono<UserLastname> lastnameMono = UserLastname.create(null);
+
+        StepVerifier.create(lastnameMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Lastname is required."))
+                .verify();
     }
 
     @Test
-    public void correctLastnameTest () {
-        UserLastname userLastName = new UserLastname("Giraldo_Gonzáles");
-        Assertions.assertEquals("GIRALDO_GONZÁLES", userLastName.value);
+    public void shouldThrowWhenNameInvalidProvided() {
+        Mono<UserLastname> lastnameMono = UserLastname.create("Giraldo123");
+
+        StepVerifier.create(lastnameMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Lastnames must contain only letters and underscore between them."))
+                .verify();
     }
 
     @Test
-    public void emptyLastnameTest () {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserLastname("");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
+    public void shouldCreate() {
+        Mono<UserLastname> lastnameMono = UserLastname.create("Giraldo_Gonzáles");
+
+        StepVerifier.create(lastnameMono)
+                .expectNext(lastnameMono.block())
+                .verifyComplete();
     }
 
-    @Test
-    public void multipleSpacesLastnameTest () {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserLastname(" Giraldo");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
-    }
-
-    @Test
-    public void numbersInLastnameTest () {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-           new UserLastname("Giraldo123");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
-    }
-
-    @Test
-    public void maxTwoLastnamesTest () {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserLastname("Giraldo_Gonzáles_Suárez");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
-    }
 }

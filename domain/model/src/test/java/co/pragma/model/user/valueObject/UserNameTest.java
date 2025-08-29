@@ -1,55 +1,41 @@
 package co.pragma.model.user.valueObject;
 
+import co.pragma.model.user.exception.UserValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 public class UserNameTest {
 
-    private final String exceptionMessage = "Names must contain only letters and underscore between them.";
-
     @Test
-    public void nullTest() {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserName(null);
-        });
-        Assertions.assertEquals("Name is required.", exception.getMessage());
+    public void shouldThrowWhenNameNullProvided() {
+        Mono<UserName> nameMono = UserName.create(null);
+
+        StepVerifier.create(nameMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Name is required."))
+                .verify();
     }
 
     @Test
-    public void correctNameTest() {
-        UserName userName = new UserName("juan_felipe");
-        Assertions.assertEquals("JUAN_FELIPE", userName.value);
+    public void shouldThrowWhenNameInvalidProvided() {
+        Mono<UserName> nameMono = UserName.create("Danna123");
+
+        StepVerifier.create(nameMono)
+                .expectErrorMatches(throwable -> throwable instanceof UserValidationException && throwable
+                        .getMessage()
+                        .equals("Names must contain only letters and underscore between them."))
+                .verify();
     }
 
     @Test
-    public void emptyNameTest() {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserName("");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
-    }
+    public void shouldCreate() {
+        Mono<UserName> nameMono = UserName.create("juan_felipe");
 
-    @Test
-    public void multipleSpacesNameTest() {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserName(" Carlos");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
-    }
-
-    @Test
-    public void numbersInNameTest() {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserName("Danna123");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
-    }
-
-    @Test
-    public void maxTwoNamesTest() {
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
-            new UserName("Juan_Esteban_Camilo");
-        });
-        Assertions.assertEquals(exceptionMessage, exception.getMessage());
+        StepVerifier.create(nameMono)
+                .expectNext(nameMono.block())
+                .verifyComplete();
     }
 }

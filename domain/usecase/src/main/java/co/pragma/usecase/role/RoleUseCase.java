@@ -9,6 +9,7 @@ import co.pragma.usecase.role.cases.CreateRoleUseCase;
 import co.pragma.usecase.role.cases.DeleteRoleUseCase;
 import co.pragma.usecase.role.cases.FindRoleUseCase;
 import co.pragma.usecase.role.cases.UpdateRoleUseCase;
+import co.pragma.usecase.role.support.RoleUpdateHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -57,8 +58,13 @@ public class RoleUseCase implements CreateRoleUseCase, FindRoleUseCase, UpdateRo
     }
 
     @Override
-    public Mono<Role> updateRole(Long roleId, Role roleNewData) {
-        return null;
+    public Mono<Role> updateRole(RoleId roleId, Role roleNewData) {
+        RoleUpdateHelper roleUpdateHelper = new RoleUpdateHelper(roleRepository);
+        return roleRepository.findById(roleId)
+                .switchIfEmpty(Mono.error(new DataIntegrationValidationException("Role not found.")))
+                .flatMap(role -> roleUpdateHelper.validateNameChange(roleNewData, role))
+                .map(role -> roleUpdateHelper.updateFields(roleNewData, role))
+                .flatMap(roleRepository::updateRole);
     }
 
 }

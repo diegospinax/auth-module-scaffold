@@ -26,7 +26,7 @@ public class UserEntryMapper {
     }
 
     public Mono<User> mapToDomain(SaveUserDto saveUserDto) {
-        List<Mono<?>> userFields = Arrays.asList(
+        List<Mono<?>> fieldsList = Arrays.asList(
                 UserName.create(saveUserDto.name()),
                 UserLastname.create(saveUserDto.lastname()),
                 UserDateBirth.create(saveUserDto.dateBirth()),
@@ -38,7 +38,7 @@ public class UserEntryMapper {
         );
 
         return Mono
-                .zip(userFields, fields -> {
+                .zip(fieldsList, fields -> {
                     UserName name = (UserName) fields[0];
                     UserLastname lastname = (UserLastname) fields[1];
                     UserDateBirth dateBirth = (UserDateBirth) fields[2];
